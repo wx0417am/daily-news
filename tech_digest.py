@@ -23,8 +23,8 @@ load_dotenv()
 
 TIMEZONE = ZoneInfo("Asia/Shanghai")
 TODAY = datetime.now(TIMEZONE).strftime("%Y-%m-%d")
-EMAIL_FROM = os.getenv("EMAIL_FROM", "1014284115@qq.com")
-EMAIL_TO = os.getenv("EMAIL_TO", "1014284115@qq.com")
+EMAIL_FROM = os.getenv("EMAIL_FROM", "15827508425@163.com")
+EMAIL_TO = os.getenv("EMAIL_TO", "15827508425@163.com")
 QQ_SMTP_AUTH_CODE = os.getenv("QQ_SMTP_AUTH_CODE")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 OPENAI_BASE_URL = os.getenv(
