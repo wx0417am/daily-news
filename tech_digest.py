@@ -25,7 +25,9 @@ TIMEZONE = ZoneInfo("Asia/Shanghai")
 TODAY = datetime.now(TIMEZONE).strftime("%Y-%m-%d")
 EMAIL_FROM = os.getenv("EMAIL_FROM", "15827508425@163.com")
 EMAIL_TO = os.getenv("EMAIL_TO", "15827508425@163.com")
-QQ_SMTP_AUTH_CODE = os.getenv("QQ_SMTP_AUTH_CODE")
+SMTP_HOST = os.getenv("SMTP_HOST", "smtp.163.com")
+SMTP_PORT = int(os.getenv("SMTP_PORT", "465"))
+SMTP_PASSWORD = os.getenv("SMTP_PASSWORD") or os.getenv("QQ_SMTP_AUTH_CODE")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 OPENAI_BASE_URL = os.getenv(
     "OPENAI_BASE_URL", "https://api.openai.com/v1/chat/completions"
@@ -142,7 +144,7 @@ def generate_digest(articles: list[dict]) -> list[dict]:
         }
         for index, article in enumerate(articles, 1)
     ]
-    prompt = f'''从候选新闻中选出最重要的 {DIGEST_COUNT} 条全球科技新闻。优先选择重大影响力、技术突破、产业变化或政策意义的信息，去除重复、广告和低价值内容，尽量覆盖 AI、芯片、网络安全、机器人、航天、新能源、生物科技、互联网和科技政策。输出中文和英文标题、双语摘要、重要性说明，并保留 source、published 和 link。只输出合法 JSON 数组，不要 Markdown。格式：
+    prompt = f'''从候选新闻中选出最重要的 {DIGEST_COUNT} 条全球科技新闻。优先选择重大影响力、技术突破、产业变化或政策意义的信息，去除重复、广告和低价值内容，尽量覆盖 AI、芯片、网络安全、机器人、航天、新能源、生物科技、互联网和科技政策。输出中文和英文标题、双���摘要、重要性说明，并保留 source、published 和 link。只输出合法 JSON 数组，不要 Markdown。格式：
 [{{"rank":1,"category":"AI","title_cn":"中文标题","title_en":"English title","summary_cn":"中文摘要","summary_en":"English summary","why_important":"重要性说明","source":"来源","published":"发布时间","link":"原文链接"}}]
 候选新闻：{json.dumps(candidates, ensure_ascii=False)}'''
     payload = {
@@ -209,16 +211,16 @@ def build_text(digest: list[dict]) -> str:
 
 
 def send_email(digest: list[dict]) -> None:
-    if not QQ_SMTP_AUTH_CODE:
-        raise RuntimeError("请在 .env 中设置 QQ_SMTP_AUTH_CODE（QQ 邮箱 SMTP 授权码）")
+    if not SMTP_PASSWORD:
+        raise RuntimeError("请在 .env 中设置 SMTP_PASSWORD（163 邮箱 SMTP 授权码）")
     message = MIMEMultipart("alternative")
     message["Subject"] = Header(f"全球科技早报｜{TODAY}｜{len(digest)}条重要信息", "utf-8")
     message["From"] = formataddr((str(Header("全球科技早报", "utf-8")), EMAIL_FROM))
     message["To"] = EMAIL_TO
     message.attach(MIMEText(build_text(digest), "plain", "utf-8"))
     message.attach(MIMEText(build_html(digest), "html", "utf-8"))
-    with smtplib.SMTP_SSL("smtp.qq.com", 465, timeout=30) as server:
-        server.login(EMAIL_FROM, QQ_SMTP_AUTH_CODE)
+    with smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT, timeout=30) as server:
+        server.login(EMAIL_FROM, SMTP_PASSWORD)
         server.sendmail(EMAIL_FROM, [EMAIL_TO], message.as_string())
 
 
